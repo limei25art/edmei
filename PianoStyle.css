@@ -1,0 +1,271 @@
+/*
+  Flex = Makes things move more easily. Or should i say... more flexible?
+  Z-index = is like layering stuff. For example the youtube video is z-index 3 so its on top of the piano
+ */
+
+body {
+  background-image: url('Data/Images/LoadingScreen1.png');
+  /* Dont repeat the image it would look like youre living in 90s */
+  background-repeat: no-repeat;
+  /* Resizes the background image to cover the entire site */
+  background-size: cover;
+  /* Keeps the background image on the center which has the nice and important view */
+  background-position: center;
+  margin: 0px;
+  padding: 40px;
+  min-height: 100vh;
+  justify-content: center;
+  align-items: center;
+  min-width: 500px;
+}
+
+.ExplainText{
+  /* Rgba makes the color transparent*/
+  background-color: rgba(128, 128, 128, 0.64);
+  /* This makes my text background round */
+  border-radius:20px;
+  /* This makes my text background larger compared to the text though */
+  padding: 12px;
+  /* This adds spacing between my lines */
+  line-height: 28px;
+  color: white;
+  font-size: 24px;
+  font-family: Apple Chancery, cursive;
+  text-align: left;
+  /* max-width: 620px; */
+  max-width: 1400px;
+  position: relative;
+  float: left;
+  margin-left: 1%;
+  margin-bottom: 2%;
+}
+
+.YTVideo{
+  /* Rgba makes the color transparent*/
+  background-color: rgba(255, 111, 183, 0.6);
+  /* This makes my text background round */
+  border-radius:20px;
+  /* This makes my text background larger compared to the text though */
+  padding: 15px;
+  position: relative;
+  display: flex;
+  float: right;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  margin-left: 1%;
+  margin-right: 1%;
+  z-index: 0;
+}
+
+/* This is a a rule i made so that the site looks slick all the time in every device. */
+@media only screen and (max-width: 500px) {
+  .YTVideo {
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    float: left;
+  }
+}
+
+/* I made multiple pianos to disable and enable */
+.piano5 {
+  display: flex;
+  position: relative;
+  top: 5%;
+  left: 1%;
+  min-width: 600px;
+  margin-top: 35px;
+}
+
+.piano6 {
+  display: none;
+  position: relative;
+  top: 5%;
+  left: 1%;
+  min-width: 600px;
+  margin-top: 35px;
+}
+
+.guitar5 {
+  display: none;
+  position: relative;
+  top: 5%;
+  left: 1%;
+  min-width: 600px;
+  margin-top: 35px;
+}
+
+.guitar6 {
+  display: none;
+  position: relative;
+  top: 5%;
+  left: 1%;
+  min-width: 600px;
+  margin-top: 35px;
+}
+
+.white {
+  color: black;
+  font-size: 24px;
+  font-family: Apple Chancery, cursive;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 620px;
+  /* This makes the text not selectable to avoid confusion */
+  /* Why would you want to copy the text of a note on top of the piano huh? */
+  user-select: none;
+  /* Self explanatory stuff */
+  width: 90px;
+  height: 378px;
+  background-color: white;
+  /* Border around every key */
+  border: 2px solid rgb(40, 182, 218);
+  z-index: 1;
+}
+
+.black {
+  color: white;
+  font-size: 18px;
+  font-family: Apple Chancery, cursive;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 340px;
+  /* This makes the text not selectable to avoid confusion */
+  /* Why would you want to copy the text of a note on top of the piano huh? */
+  user-select: none;
+  width: 55px;
+  height: 220px;
+  background-color: black;
+  margin-left: -28px;
+  margin-right: -28px;
+  border: 2px solid rgb(40, 182, 218);
+  /* Keeps the black keys always on top of the white keys */
+  z-index: 2;
+}
+
+.white.pressed {
+  background-color: rgb(220, 220, 220);
+}
+
+.black.pressed {
+  background-color: rgb(98, 98, 98);
+}
+
+.GenButton {
+  display: static;
+  margin-top: 12px;
+  margin-bottom: 20px;
+  margin-left: 2.7%;
+  min-width: 800px;
+}
+
+/* Makes buttons smaller so they appear on screen when theres too little space */
+@media only screen and (max-width: 800px) {
+  .InstButton {
+    width: 100px;
+  }
+  .OctaveButton {
+    width: 120px;
+  }
+}
+
+.InstButton {
+  /* Rgba makes the color transparent*/
+  background-color: rgb(0, 182, 255);
+  /* This makes my text background round */
+  border-radius:20px;
+  /* This adds spacing between my lines */
+  line-height: 24px;
+  /* This makes the text not selectable to avoid confusion */
+  user-select: none;
+  color: white;
+  font-size: 24px;
+  font-family: Apple Chancery, cursive;
+  float: left;
+}
+
+.InstButton.pressed {
+  background-color: rgb(255, 115, 0);
+  user-select: none;
+  color: white;
+}
+
+.OctaveButton.OctIncrease {
+   /* Rgba makes the color transparent*/
+   background-color: rgb(0, 192, 64);
+   /* This makes my text background round */
+   border-radius:20px;
+   /* This adds spacing between my lines */
+   line-height: 24px;
+   color: white;
+   font-size: 24px;
+   font-family: Apple Chancery, cursive;
+   float: none;
+}
+
+.OctaveButton.OctDecrease {
+  /* Rgba makes the color transparent*/
+  background-color: rgb(218, 0, 0);
+  /* This makes my text background round */
+  border-radius:20px;
+  /* This adds spacing between my lines */
+  line-height: 24px;
+  color: white;
+  font-size: 24px;
+  font-family: Apple Chancery, cursive;
+  float: left;
+}
+
+.LayoutButton.LayoutChange   {
+  /* Rgba makes the color transparent*/
+  background-color: rgb(184, 184, 184);
+  /* This makes my text background round */
+  border-radius:20px;
+  /* This adds spacing between my lines */
+  line-height: 32px;
+  /* This makes the text not selectable to avoid confusion */
+  user-select: none;
+  color: rgb(255, 255, 255);
+  font-size: 24px;
+  font-family: Apple Chancery, cursive;
+  float: right;
+  max-width: 130px;
+  margin-right: 1%;
+  margin-bottom: 2%;
+}
+
+.LayoutButton.pressed {
+  background-color: rgb(58, 58, 58);
+  user-select: none;
+  color: white;
+}
+
+.ReturnButton.ReturnHomeBtn{
+  /* Rgba makes the color transparent*/
+  background-color: rgb(212, 8, 120);
+  /* This makes my text background round */
+  border-radius:20px;
+  /* This adds spacing between my lines */
+  line-height: 32px;
+  /* This makes the text not selectable to avoid confusion */
+  user-select: none;
+  color: rgb(255, 255, 255);
+  font-size: 24px;
+  font-family: Apple Chancery, cursive;
+  float: right;
+  min-width: 130px;
+  margin-right: 1%;
+  margin-bottom: 5%;
+	margin-top: 2%;
+}
+
+.CreatorText {
+  color: rgb(255, 255, 255);
+  /* Multiple shadowing to make it more visible to the bare eye */
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  user-select: none;
+  position: fixed;
+  bottom: 1%;
+  right: 1%;
+  z-index: 39;
+}
