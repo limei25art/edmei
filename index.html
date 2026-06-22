@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>圖片卡牌排序遊戲</title>
     <style>
         :root {
@@ -18,19 +18,20 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
             color: #333;
+            touch-action: manipulation; /* 防止手機點擊時螢幕縮放 */
         }
 
-        h1 { margin-bottom: 10px; }
+        h1 { margin-bottom: 5px; font-size: 1.8rem; text-align: center; }
         .stats {
             display: flex;
             gap: 20px;
-            font-size: 1.2rem;
-            margin-bottom: 30px;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
             font-weight: bold;
         }
         .stats span { color: var(--error); }
@@ -42,30 +43,33 @@
             justify-content: center;
             flex-wrap: wrap;
             gap: 10px;
-            min-height: 180px;
-            padding: 20px;
+            min-height: 160px;
+            padding: 15px;
             background: #fff;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-bottom: 40px;
-            max-width: 95vw;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 900px;
+            box-sizing: border-box;
         }
 
         /* 放置區 (Slot) */
         .slot {
-            width: 80px;
-            height: 120px;
+            width: 75px;
+            height: 110px;
             border: 3px dashed #B0BEC5;
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #90A4AE;
             transition: all 0.2s;
             font-weight: bold;
+            cursor: pointer; /* 提示可點擊 */
         }
-        .slot.drag-over {
+        .slot.drag-over, .slot:active {
             background-color: rgba(74, 144, 226, 0.2);
             border-color: var(--primary);
             transform: scale(1.05);
@@ -73,8 +77,8 @@
 
         /* 卡牌樣式 */
         .card {
-            width: 100px;
-            height: 140px;
+            width: 90px;
+            height: 125px;
             background-color: var(--card-bg);
             border: 2px solid #CFD8DC;
             border-radius: 8px;
@@ -88,28 +92,36 @@
             background-position: center;
             background-repeat: no-repeat;
             position: relative;
+            transition: transform 0.2s, border-color 0.2s;
         }
         
+        /* 手機點擊選中狀態 */
+        .card.selected {
+            border: 4px solid var(--success);
+            transform: translateY(-8px);
+            box-shadow: 0 8px 12px rgba(46, 204, 113, 0.3);
+        }
+
         .board-card {
             cursor: default;
             border-color: var(--primary);
-            margin: 0 2px; /* 稍微增加卡牌間距，讓沒有空位時視覺更自然 */
+            margin: 0 2px;
         }
 
         /* 卡牌上的隱藏順序數字 */
         .card-value-badge {
             position: absolute;
-            bottom: -10px;
-            right: -10px;
+            bottom: -8px;
+            right: -8px;
             background: var(--primary);
             color: white;
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: bold;
             border: 2px solid white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -120,20 +132,25 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
         }
         
         .instruction {
-            font-size: 1.1rem;
-            color: #666;
+            font-size: 1rem;
+            color: #555;
             font-weight: bold;
+            text-align: center;
+            background: #E8F4F8;
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin-bottom: 10px;
         }
 
         /* 答錯的震動動畫 */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-10px); }
-            40%, 80% { transform: translateX(10px); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
         }
         .shake { animation: shake 0.4s ease-in-out; border-color: var(--error) !important; }
 
@@ -142,40 +159,50 @@
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             color: white;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 10;
         }
-        #game-over h2 { font-size: 3rem; margin: 0 0 20px 0; }
-        #game-over p { font-size: 1.5rem; }
+        #game-over h2 { font-size: 2.5rem; margin: 0 0 15px 0; }
+        #game-over p { font-size: 1.2rem; }
         button {
             margin-top: 20px;
-            padding: 10px 20px;
+            padding: 12px 25px;
             font-size: 1.2rem;
-            background: var(--primary);
+            background: var(--success);
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
+            font-weight: bold;
         }
-        button:hover { background: #357ABD; }
+        button:hover { background: #27AE60; }
+
+        /* 📱 手機版 RWD 響應式設計 */
+        @media (max-width: 600px) {
+            .slot { width: 45px; height: 75px; font-size: 0.7rem; border-width: 2px; }
+            .card { width: 55px; height: 80px; }
+            .card-value-badge { width: 20px; height: 20px; font-size: 0.7rem; bottom: -5px; right: -5px; }
+            #area-1 { gap: 4px; padding: 10px; }
+            .instruction { font-size: 0.9rem; }
+        }
     </style>
 </head>
 <body>
 
     <h1>卡牌圖片排序挑戰</h1>
     <div class="stats">
-        <div>目標進度：<span id="card-count" style="color:var(--primary)">3 / 20</span></div>
-        <div>錯誤次數：<span id="mistake-count">0</span></div>
+        <div>進度：<span id="card-count" style="color:var(--primary)">3 / 10</span></div>
+        <div>錯誤：<span id="mistake-count">0</span></div>
     </div>
 
     <div id="area-1"></div>
 
     <div id="area-2">
-        <div class="instruction">👇 將下方卡牌「拖曳」到上方順序正確的空位中 👇</div>
+        <div class="instruction">👇 電腦可「拖曳」，手機請「點擊」卡牌後再「點擊」上方空位 👇</div>
         <div id="draw-area"></div>
     </div>
 
@@ -186,9 +213,9 @@
     </div>
 
     <script>
-        // 設定 20 張卡牌的資料
+        // 設定 30 張卡牌的資料 (前 8 張為你上傳的圖片)
         const allCardsData = [
-            { id: 1, value: 1, src: 'images/01.png' },
+           { id: 1, value: 1, src: 'images/01.png' },
             { id: 2, value: 2, src: 'images/02.png' },
             { id: 3, value: 3, src: 'images/03.png' },
             { id: 4, value: 4, src: 'images/04.png' },
@@ -208,13 +235,26 @@
             { id: 18, value: 18, src: 'images/18.png' },
             { id: 19, value: 19, src: 'images/19.png' },
             { id: 20, value: 20, src: 'images/20.png' },
+            { id: 21, value: 21, src: 'images/21.png' },
+            { id: 22, value: 22, src: 'images/22.png' },
+            { id: 23, value: 23, src: 'images/23.png' },
+            { id: 24, value: 24, src: 'images/24.png' },
+            { id: 25, value: 25, src: 'images/25.png' },
+            { id: 26, value: 26, src: 'images/26.png' },
+            { id: 27, value: 27, src: 'images/27.png' },
+            { id: 28, value: 28, src: 'images/28.png' },
+            { id: 29, value: 29, src: 'images/29.png' },
+            { id: 30, value: 30, src: 'images/30.png' }
         ];
 
         let deck = [];
         let board = [];
         let currentCard = null;
         let mistakes = 0;
-        const TARGET_CARDS = 20;
+        let isCardSelected = false; // 手機版點擊狀態
+
+        const TARGET_CARDS = 10; // 目標修改為 10 張牌
+        const TOTAL_CARDS_IN_DB = 30; // 總牌庫 30 張
 
         const area1 = document.getElementById('area-1');
         const drawArea = document.getElementById('draw-area');
@@ -228,6 +268,7 @@
 
             board = [];
             mistakes = 0;
+            isCardSelected = false;
             updateStats();
             gameOverScreen.style.display = 'none';
 
@@ -250,6 +291,7 @@
 
         function drawNewCard() {
             currentCard = deck.pop();
+            isCardSelected = false; // 重置點擊狀態
             renderDrawnCard();
         }
 
@@ -262,37 +304,40 @@
             area1.innerHTML = '';
             
             for (let i = 0; i <= board.length; i++) {
-                // 👉 新增的邏輯：判斷是否需要顯示這個空位
                 let showSlot = true;
                 
+                // 判斷是否需要隱藏空位 (相鄰數字、極端值)
                 if (i > 0 && i < board.length) {
-                    // 如果相鄰兩張牌數字差距只有 1 (如 9 和 10)，中間隱藏空位
-                    if (board[i].value - board[i-1].value <= 1) {
-                        showSlot = false;
-                    }
+                    if (board[i].value - board[i-1].value <= 1) showSlot = false;
                 } else if (i === 0 && board.length > 0) {
-                    // 如果第一張牌是 1，最前面的空位隱藏
                     if (board[0].value === 1) showSlot = false;
                 } else if (i === board.length && board.length > 0) {
-                    // 如果最後一張牌是 20，最後面的空位隱藏
-                    if (board[board.length - 1].value === TARGET_CARDS) showSlot = false;
+                    if (board[board.length - 1].value === TOTAL_CARDS_IN_DB) showSlot = false;
                 }
 
-                // 只有在需要顯示時才產生空位 (Slot)
+                // 產生空位
                 if (showSlot) {
                     const slot = document.createElement('div');
                     slot.className = 'slot';
                     slot.innerText = '放這裡';
                     slot.dataset.index = i;
                     
+                    // 電腦版拖曳事件
                     slot.addEventListener('dragover', handleDragOver);
                     slot.addEventListener('dragleave', handleDragLeave);
                     slot.addEventListener('drop', handleDrop);
+
+                    // 手機版點擊事件
+                    slot.addEventListener('click', (e) => {
+                        if (isCardSelected) {
+                            processPlacement(parseInt(e.currentTarget.dataset.index));
+                        }
+                    });
                     
                     area1.appendChild(slot);
                 }
 
-                // 建立已存在的圖片卡牌
+                // 產生已存在的卡牌
                 if (i < board.length) {
                     const cardData = board[i];
                     const card = document.createElement('div');
@@ -317,12 +362,19 @@
             card.id = 'current-drag-card';
             card.style.backgroundImage = `url('${currentCard.src}')`;
 
+            // 電腦版拖曳
             card.addEventListener('dragstart', (e) => {
                 e.dataTransfer.setData('text/plain', currentCard.id);
                 setTimeout(() => card.style.opacity = '0.6', 0);
             });
             card.addEventListener('dragend', () => {
                 card.style.opacity = '1';
+            });
+
+            // 手機版點擊
+            card.addEventListener('click', () => {
+                isCardSelected = true;
+                card.classList.add('selected');
             });
 
             drawArea.appendChild(card);
@@ -341,8 +393,11 @@
             e.preventDefault();
             const slot = e.currentTarget;
             slot.classList.remove('drag-over');
-            
-            const dropIndex = parseInt(slot.dataset.index);
+            processPlacement(parseInt(slot.dataset.index));
+        }
+
+        // 統一處理「拖曳」與「點擊」的放置邏輯
+        function processPlacement(dropIndex) {
             const correctIndex = getCorrectIndex(currentCard);
             const dragCardElement = document.getElementById('current-drag-card');
 
@@ -362,11 +417,14 @@
                 // 答錯了
                 mistakes++;
                 updateStats();
-                
-                dragCardElement.classList.add('shake');
-                setTimeout(() => {
-                    dragCardElement.classList.remove('shake');
-                }, 400);
+                isCardSelected = false; // 取消選中狀態
+                if(dragCardElement) {
+                    dragCardElement.classList.remove('selected');
+                    dragCardElement.classList.add('shake');
+                    setTimeout(() => {
+                        dragCardElement.classList.remove('shake');
+                    }, 400);
+                }
             }
         }
 
