@@ -1,120 +1,392 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JavaScript - Card Game</title>
-    <link rel="stylesheet" href="main.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <script src="https://kit.fontawesome.com/2745e261bc.js"></script>
+    <title>圖片卡牌排序遊戲</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --bg-color: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --error: #E74C3C;
+            --success: #2ECC71;
+            --slot-bg: #E1E8ED;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+        }
+
+        h1 { margin-bottom: 10px; }
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+        .stats span { color: var(--error); }
+
+        /* 第一區：遊戲介面中央 (已排序卡牌) */
+        #area-1 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 180px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+            max-width: 95vw;
+        }
+
+        /* 放置區 (Slot) */
+        .slot {
+            width: 80px;
+            height: 120px;
+            border: 3px dashed #B0BEC5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: #90A4AE;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        .slot.drag-over {
+            background-color: rgba(74, 144, 226, 0.2);
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        /* 卡牌樣式 */
+        .card {
+            width: 100px;
+            height: 140px;
+            background-color: var(--card-bg);
+            border: 2px solid #CFD8DC;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            user-select: none;
+            cursor: grab;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+        
+        .board-card {
+            cursor: default;
+            border-color: var(--primary);
+            margin: 0 2px; /* 稍微增加卡牌間距，讓沒有空位時視覺更自然 */
+        }
+
+        /* 卡牌上的隱藏順序數字 */
+        .card-value-badge {
+            position: absolute;
+            bottom: -10px;
+            right: -10px;
+            background: var(--primary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* 第二區：下放抽牌區 */
+        #area-2 {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .instruction {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: bold;
+        }
+
+        /* 答錯的震動動畫 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.4s ease-in-out; border-color: var(--error) !important; }
+
+        /* 遊戲結束畫面 */
+        #game-over {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        #game-over h2 { font-size: 3rem; margin: 0 0 20px 0; }
+        #game-over p { font-size: 1.5rem; }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover { background: #357ABD; }
+    </style>
 </head>
-
 <body>
-    <div class="container">
-        <ul class="cards">
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-1.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-2.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-3.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-4.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-5.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-6.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-7.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-8.png" alt="card-image">
-                </div>
-            </li>
 
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-1.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-2.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-3.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-4.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-5.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-6.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-7.png" alt="card-image">
-                </div>
-            </li>
-            <li class="card">
-                <div class="view front-view"></div>
-                <div class="view back-view">
-                    <img src="images/img-8.png" alt="card-image">
-                </div>
-            </li>
-        </ul>
+    <h1>卡牌圖片排序挑戰</h1>
+    <div class="stats">
+        <div>目標進度：<span id="card-count" style="color:var(--primary)">3 / 20</span></div>
+        <div>錯誤次數：<span id="mistake-count">0</span></div>
     </div>
 
-    <script src="script.js"></script>
-</body>
+    <div id="area-1"></div>
 
+    <div id="area-2">
+        <div class="instruction">👇 將下方卡牌「拖曳」到上方順序正確的空位中 👇</div>
+        <div id="draw-area"></div>
+    </div>
+
+    <div id="game-over">
+        <h2>🎉 遊戲完成！ 🎉</h2>
+        <p>你的總錯誤次數為：<strong id="final-mistakes" style="color:var(--error)">0</strong> 次</p>
+        <button onclick="startGame()">再玩一次</button>
+    </div>
+
+    <script>
+        // 設定 20 張卡牌的資料
+        const allCardsData = [
+           { id: 1, value: 1, src: '01.png' },
+            { id: 2, value: 2, src: '02.png' },
+            { id: 3, value: 3, src: '03.png' },
+            { id: 4, value: 4, src: '04.png' },
+            { id: 5, value: 5, src: '05.png' },
+            { id: 6, value: 6, src: '06.png' },
+            { id: 7, value: 7, src: '07.png' },
+            { id: 8, value: 8, src: '08.png' },
+            // 下方為預留的 12 張圖片，請換成你實際的圖片檔名 (如 card9.jpg)
+            // 為了預覽效果，目前暫時使用網路佔位圖片，你可以改成自己的檔名
+            { id: 9, value: 9, src: '09.png' },
+            { id: 10, value: 10, src: '10.png' },
+            { id: 11, value: 11, src: '11.png' },
+            { id: 12, value: 12, src: '12.png' },
+            { id: 13, value: 13, src: '13.png' },
+            { id: 14, value: 14, src: '14.png' },
+            { id: 15, value: 15, src: '15.png' },
+            { id: 16, value: 16, src: '16.png' },
+            { id: 17, value: 17, src: '17.png' },
+            { id: 18, value: 18, src: '18.png' },
+            { id: 19, value: 19, src: '19.png' },
+            { id: 20, value: 20, src: '20.png' },
+        ];
+
+        let deck = [];
+        let board = [];
+        let currentCard = null;
+        let mistakes = 0;
+        const TARGET_CARDS = 20;
+
+        const area1 = document.getElementById('area-1');
+        const drawArea = document.getElementById('draw-area');
+        const mistakeCountEl = document.getElementById('mistake-count');
+        const cardCountEl = document.getElementById('card-count');
+        const gameOverScreen = document.getElementById('game-over');
+
+        function startGame() {
+            deck = [...allCardsData];
+            shuffleDeck(deck);
+
+            board = [];
+            mistakes = 0;
+            updateStats();
+            gameOverScreen.style.display = 'none';
+
+            // 抽前3張牌並排序
+            for(let i = 0; i < 3; i++) {
+                board.push(deck.pop());
+            }
+            board.sort((a, b) => a.value - b.value);
+
+            drawNewCard();
+            renderBoard();
+        }
+
+        function shuffleDeck(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function drawNewCard() {
+            currentCard = deck.pop();
+            renderDrawnCard();
+        }
+
+        function updateStats() {
+            mistakeCountEl.innerText = mistakes;
+            cardCountEl.innerText = `${board.length} / ${TARGET_CARDS}`;
+        }
+
+        function renderBoard() {
+            area1.innerHTML = '';
+            
+            for (let i = 0; i <= board.length; i++) {
+                // 👉 新增的邏輯：判斷是否需要顯示這個空位
+                let showSlot = true;
+                
+                if (i > 0 && i < board.length) {
+                    // 如果相鄰兩張牌數字差距只有 1 (如 9 和 10)，中間隱藏空位
+                    if (board[i].value - board[i-1].value <= 1) {
+                        showSlot = false;
+                    }
+                } else if (i === 0 && board.length > 0) {
+                    // 如果第一張牌是 1，最前面的空位隱藏
+                    if (board[0].value === 1) showSlot = false;
+                } else if (i === board.length && board.length > 0) {
+                    // 如果最後一張牌是 20，最後面的空位隱藏
+                    if (board[board.length - 1].value === TARGET_CARDS) showSlot = false;
+                }
+
+                // 只有在需要顯示時才產生空位 (Slot)
+                if (showSlot) {
+                    const slot = document.createElement('div');
+                    slot.className = 'slot';
+                    slot.innerText = '放這裡';
+                    slot.dataset.index = i;
+                    
+                    slot.addEventListener('dragover', handleDragOver);
+                    slot.addEventListener('dragleave', handleDragLeave);
+                    slot.addEventListener('drop', handleDrop);
+                    
+                    area1.appendChild(slot);
+                }
+
+                // 建立已存在的圖片卡牌
+                if (i < board.length) {
+                    const cardData = board[i];
+                    const card = document.createElement('div');
+                    card.className = 'card board-card';
+                    card.style.backgroundImage = `url('${cardData.src}')`;
+
+                    const badge = document.createElement('div');
+                    badge.className = 'card-value-badge';
+                    badge.innerText = cardData.value;
+                    card.appendChild(badge);
+
+                    area1.appendChild(card);
+                }
+            }
+        }
+
+        function renderDrawnCard() {
+            drawArea.innerHTML = '';
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.draggable = true;
+            card.id = 'current-drag-card';
+            card.style.backgroundImage = `url('${currentCard.src}')`;
+
+            card.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', currentCard.id);
+                setTimeout(() => card.style.opacity = '0.6', 0);
+            });
+            card.addEventListener('dragend', () => {
+                card.style.opacity = '1';
+            });
+
+            drawArea.appendChild(card);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const slot = e.currentTarget;
+            slot.classList.remove('drag-over');
+            
+            const dropIndex = parseInt(slot.dataset.index);
+            const correctIndex = getCorrectIndex(currentCard);
+            const dragCardElement = document.getElementById('current-drag-card');
+
+            if (dropIndex === correctIndex) {
+                // 答對了
+                board.splice(correctIndex, 0, currentCard);
+                updateStats();
+                
+                if (board.length >= TARGET_CARDS) {
+                    renderBoard();
+                    setTimeout(endGame, 300);
+                } else {
+                    drawNewCard();
+                    renderBoard();
+                }
+            } else {
+                // 答錯了
+                mistakes++;
+                updateStats();
+                
+                dragCardElement.classList.add('shake');
+                setTimeout(() => {
+                    dragCardElement.classList.remove('shake');
+                }, 400);
+            }
+        }
+
+        function getCorrectIndex(cardToPlace) {
+            for (let i = 0; i < board.length; i++) {
+                if (cardToPlace.value < board[i].value) {
+                    return i;
+                }
+            }
+            return board.length;
+        }
+
+        function endGame() {
+            document.getElementById('final-mistakes').innerText = mistakes;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        startGame();
+    </script>
+</body>
 </html>
