@@ -253,7 +253,7 @@
     <div id="game-over">
         <h2>挑戰完成</h2>
         <p>您的總錯誤次數為：<strong id="final-mistakes" style="color: var(--apple-red); font-size: 1.2rem;">0</strong> 次</p>
-        <button onclick="startGame()">再玩一次</button>
+        <button id="restart-btn">再玩一次</button>
     </div>
 
     <script>
@@ -275,6 +275,7 @@
                 playerVars: { 
                     'autoplay': 0, 
                     'controls': 0,
+                    'playsinline': 1, // 【手機優化】防止 iPhone 播放時強制跳出全螢幕
                     'origin': window.location.origin
                 },
                 events: {
@@ -287,19 +288,30 @@
             });
         }
 
+        // 【手機優化】必須在點擊按鈕的瞬間命令播放器動一下，解除手機的靜音鎖
         document.getElementById('init-btn').addEventListener('click', () => {
             document.getElementById('start-screen').style.display = 'none';
+            if (isPlayerReady) {
+                ytPlayer.playVideo(); 
+            }
+            startGame();
+        });
+
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            if (isPlayerReady) {
+                ytPlayer.playVideo(); 
+            }
             startGame();
         });
         
         document.getElementById('init-btn').innerText = '載入音樂中...';
         document.getElementById('init-btn').disabled = true;
 
-        // --- 核心修改：在每張卡牌的資料中直接指定歌曲的 YouTube 影片 ID (ytId) ---
+        // --- 核心音樂卡牌資料庫 ---
         const allCardsData = [
-            { id: 1, value: 1, src: 'images/01.png', ytId: 'iV4qduCR3MU' }, // 卡片 1 的指定歌曲
-            { id: 2, value: 2, src: 'images/02.png', ytId: 'eG5Zm8ZAutI' }, // 卡片 2 的指定歌曲
-            { id: 3, value: 3, src: 'images/03.png', ytId: 'OTnVTUdyT30' }, // 卡片 3 的指定歌曲
+            { id: 1, value: 1, src: 'images/01.png', ytId: 'iV4qduCR3MU' }, 
+            { id: 2, value: 2, src: 'images/02.png', ytId: 'eG5Zm8ZAutI' }, 
+            { id: 3, value: 3, src: 'images/03.png', ytId: 'OTnVTUdyT30' }, 
             { id: 4, value: 4, src: 'images/04.png', ytId: 'iV4qduCR3MU' }, 
             { id: 5, value: 5, src: 'images/05.png', ytId: 'eG5Zm8ZAutI' }, 
             { id: 6, value: 6, src: 'images/06.png', ytId: 'OTnVTUdyT30' }, 
@@ -370,13 +382,20 @@
             }
         }
 
-        // --- 修改點：直接讀取當前抽中卡牌的指定的歌曲欄位 (currentCard.ytId) ---
         function drawNewCard() {
             currentCard = deck.pop();
             isCardSelected = false; 
             renderDrawnCard();
 
-            // 如果播放器準備好，且這張卡牌有設定 ytId，就直接載入並播放
+            // 電腦版流程：抽卡時直接嘗試加載與播放
+            if (isPlayerReady && currentCard && currentCard.ytId) {
+                ytPlayer.cueVideoById(currentCard.ytId); // 先行預載緩衝
+                ytPlayer.playVideo();
+            }
+        }
+
+        // 【手機優化專用功能】在玩家實際點擊螢幕卡片時強制切換音樂
+        function playCurrentCardMusic() {
             if (isPlayerReady && currentCard && currentCard.ytId) {
                 ytPlayer.loadVideoById(currentCard.ytId);
                 ytPlayer.playVideo();
@@ -456,6 +475,9 @@
             card.addEventListener('click', () => {
                 isCardSelected = true;
                 card.classList.add('selected');
+                
+                // 【手機優化核心】手機用戶必須點擊卡牌，在點擊的當下立刻強制觸發 YouTube 播放，繞過手機自動播放攔截
+                playCurrentCardMusic();
             });
 
             drawArea.appendChild(card);
@@ -505,8 +527,6 @@
                 }
             }
         }
-
-        // 修正：答錯不需要重播或重新抽歌，保持原本抽到的歌繼續播
 
         function getCorrectIndex(cardToPlace) {
             for (let i = 0; i < board.length; i++) {
