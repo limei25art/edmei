@@ -173,7 +173,6 @@
             box-shadow: 0 4px 14px rgba(255, 59, 48, 0.2) !important;
         }
 
-        /* 初始開始畫面與遊戲結束畫面共用樣式 */
         #start-screen, #game-over {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -230,10 +229,8 @@
 </head>
 <body>
 
-    <!-- 隱藏的 YouTube 播放器容器 -->
     <div id="youtube-player" style="display: none;"></div>
 
-    <!-- 新增：初始開始畫面 (為了破解瀏覽器自動播放限制) -->
     <div id="start-screen">
         <h2>卡牌排序挑戰</h2>
         <p>準備好接受挑戰了嗎？</p>
@@ -263,14 +260,6 @@
         // --- YouTube IFrame API 區塊 ---
         let ytPlayer;
         let isPlayerReady = false;
-        
-        // 請在此填入你想要播放的 YouTube 影片 ID 列表 (v=後面的隨機亂碼)
-        // 每次抽卡會從中隨機挑選一首播放
-        const ytMusicList = [
-            'eG5Zm8ZAutI', // Lofi Girl 範例
-            'iV4qduCR3MU', // Lofi 範例 2
-            'x2fAnFXDj9Q'  // Lofi 範例 3
-        ];
 
         // 動態載入 YouTube API 腳本
         const tag = document.createElement('script');
@@ -278,12 +267,11 @@
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        // YouTube API 準備就緒時的初始化函式
         function onYouTubeIframeAPIReady() {
             ytPlayer = new YT.Player('youtube-player', {
                 height: '0',
                 width: '0',
-                videoId: ytMusicList[0], // 預設載入第一首
+                videoId: 'x2fAnFXDj9Q', // 初始預設載入歌曲
                 playerVars: { 
                     'autoplay': 0, 
                     'controls': 0,
@@ -292,7 +280,6 @@
                 events: {
                     'onReady': () => { 
                         isPlayerReady = true; 
-                        // 啟用開始按鈕
                         document.getElementById('init-btn').innerText = '開始遊戲';
                         document.getElementById('init-btn').disabled = false;
                     }
@@ -300,48 +287,46 @@
             });
         }
 
-        // 綁定開始按鈕
         document.getElementById('init-btn').addEventListener('click', () => {
             document.getElementById('start-screen').style.display = 'none';
             startGame();
         });
         
-        // 預設按鈕狀態 (等待 YouTube API 載入)
         document.getElementById('init-btn').innerText = '載入音樂中...';
         document.getElementById('init-btn').disabled = true;
 
-        // --- 遊戲邏輯區塊 ---
+        // --- 核心修改：在每張卡牌的資料中直接指定歌曲的 YouTube 影片 ID (ytId) ---
         const allCardsData = [
-            { id: 1, value: 1, src: 'images/01.png' },
-            { id: 2, value: 2, src: 'images/02.png' },
-            { id: 3, value: 3, src: 'images/03.png' },
-            { id: 4, value: 4, src: 'images/04.png' },
-            { id: 5, value: 5, src: 'images/05.png' },
-            { id: 6, value: 6, src: 'images/06.png' },
-            { id: 7, value: 7, src: 'images/07.png' },
-            { id: 8, value: 8, src: 'images/08.png' },
-            { id: 9, value: 9, src: 'images/09.png' },
-            { id: 10, value: 10, src: 'images/10.png' },
-            { id: 11, value: 11, src: 'images/11.png' },
-            { id: 12, value: 12, src: 'images/12.png' },
-            { id: 13, value: 13, src: 'images/13.png' },
-            { id: 14, value: 14, src: 'images/14.png' },
-            { id: 15, value: 15, src: 'images/15.png' },
-            { id: 16, value: 16, src: 'images/16.png' },
-            { id: 17, value: 17, src: 'images/17.png' },
-            { id: 18, value: 18, src: 'images/18.png' },
-            { id: 19, value: 19, src: 'images/19.png' },
-            { id: 20, value: 20, src: 'images/20.png' },
-            { id: 21, value: 21, src: 'images/21.png' },
-            { id: 22, value: 22, src: 'images/22.png' },
-            { id: 23, value: 23, src: 'images/23.png' },
-            { id: 24, value: 24, src: 'images/24.png' },
-            { id: 25, value: 25, src: 'images/25.png' },
-            { id: 26, value: 26, src: 'images/26.png' },
-            { id: 27, value: 27, src: 'images/27.png' },
-            { id: 28, value: 28, src: 'images/28.png' },
-            { id: 29, value: 29, src: 'images/29.png' },
-            { id: 30, value: 30, src: 'images/30.png' }
+            { id: 1, value: 1, src: 'images/01.png', ytId: 'iV4qduCR3MU' }, // 卡片 1 的指定歌曲
+            { id: 2, value: 2, src: 'images/02.png', ytId: 'eG5Zm8ZAutI' }, // 卡片 2 的指定歌曲
+            { id: 3, value: 3, src: 'images/03.png', ytId: 'OTnVTUdyT30' }, // 卡片 3 的指定歌曲
+            { id: 4, value: 4, src: 'images/04.png', ytId: 'iV4qduCR3MU' }, 
+            { id: 5, value: 5, src: 'images/05.png', ytId: 'eG5Zm8ZAutI' }, 
+            { id: 6, value: 6, src: 'images/06.png', ytId: 'OTnVTUdyT30' }, 
+            { id: 7, value: 7, src: 'images/07.png', ytId: 'iV4qduCR3MU' }, 
+            { id: 8, value: 8, src: 'images/08.png', ytId: 'eG5Zm8ZAutI' }, 
+            { id: 9, value: 9, src: 'images/09.png', ytId: 'OTnVTUdyT30' }, 
+            { id: 10, value: 10, src: 'images/10.png', ytId: 'iV4qduCR3MU' },
+            { id: 11, value: 11, src: 'images/11.png', ytId: 'eG5Zm8ZAutI' },
+            { id: 12, value: 12, src: 'images/12.png', ytId: 'OTnVTUdyT30' },
+            { id: 13, value: 13, src: 'images/13.png', ytId: 'iV4qduCR3MU' },
+            { id: 14, value: 14, src: 'images/14.png', ytId: 'eG5Zm8ZAutI' },
+            { id: 15, value: 15, src: 'images/15.png', ytId: 'OTnVTUdyT30' },
+            { id: 16, value: 16, src: 'images/16.png', ytId: 'iV4qduCR3MU' },
+            { id: 17, value: 17, src: 'images/17.png', ytId: 'eG5Zm8ZAutI' },
+            { id: 18, value: 18, src: 'images/18.png', ytId: 'OTnVTUdyT30' },
+            { id: 19, value: 19, src: 'images/19.png', ytId: 'iV4qduCR3MU' },
+            { id: 20, value: 20, src: 'images/20.png', ytId: 'eG5Zm8ZAutI' },
+            { id: 21, value: 21, src: 'images/21.png', ytId: 'OTnVTUdyT30' },
+            { id: 22, value: 22, src: 'images/22.png', ytId: 'iV4qduCR3MU' },
+            { id: 23, value: 23, src: 'images/23.png', ytId: 'eG5Zm8ZAutI' },
+            { id: 24, value: 24, src: 'images/24.png', ytId: 'OTnVTUdyT30' },
+            { id: 25, value: 25, src: 'images/25.png', ytId: 'iV4qduCR3MU' },
+            { id: 26, value: 26, src: 'images/26.png', ytId: 'eG5Zm8ZAutI' },
+            { id: 27, value: 27, src: 'images/27.png', ytId: 'OTnVTUdyT30' },
+            { id: 28, value: 28, src: 'images/28.png', ytId: 'iV4qduCR3MU' },
+            { id: 29, value: 29, src: 'images/29.png', ytId: 'eG5Zm8ZAutI' },
+            { id: 30, value: 30, src: 'images/30.png', ytId: 'OTnVTUdyT30' }
         ];
 
         let deck = [];
@@ -385,16 +370,15 @@
             }
         }
 
-        // --- 核心修改：在抽卡時播放音樂 ---
+        // --- 修改點：直接讀取當前抽中卡牌的指定的歌曲欄位 (currentCard.ytId) ---
         function drawNewCard() {
             currentCard = deck.pop();
             isCardSelected = false; 
             renderDrawnCard();
 
-            // 呼叫 YouTube API 播放隨機音樂
-            if (isPlayerReady) {
-                const randomVid = ytMusicList[Math.floor(Math.random() * ytMusicList.length)];
-                ytPlayer.loadVideoById(randomVid);
+            // 如果播放器準備好，且這張卡牌有設定 ytId，就直接載入並播放
+            if (isPlayerReady && currentCard && currentCard.ytId) {
+                ytPlayer.loadVideoById(currentCard.ytId);
                 ytPlayer.playVideo();
             }
         }
@@ -501,7 +485,6 @@
                 board.splice(correctIndex, 0, currentCard);
                 updateStats();
                 
-                // 若答對但還沒結束，會觸發抽新卡 (自動換歌)
                 if (board.length >= TARGET_CARDS) {
                     renderBoard();
                     setTimeout(endGame, 300);
@@ -523,6 +506,8 @@
             }
         }
 
+        // 修正：答錯不需要重播或重新抽歌，保持原本抽到的歌繼續播
+
         function getCorrectIndex(cardToPlace) {
             for (let i = 0; i < board.length; i++) {
                 if (cardToPlace.value < board[i].value) {
@@ -535,13 +520,8 @@
         function endGame() {
             document.getElementById('final-mistakes').innerText = mistakes;
             gameOverScreen.style.display = 'flex';
-            
-            // 遊戲結束時可選擇暫停音樂
             if (isPlayerReady) ytPlayer.pauseVideo();
         }
-
-        // 移除最底部的 startGame();
-        // 改由 #init-btn 點擊事件觸發
     </script>
 </body>
 </html>
