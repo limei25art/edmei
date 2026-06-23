@@ -47,7 +47,7 @@
             font-weight: 500;
             background: var(--apple-surface);
             padding: 10px 20px;
-            border-radius: 980px; /* 膠囊形狀 */
+            border-radius: 980px;
             border: 1px solid var(--apple-border);
             box-shadow: 0 2px 8px rgba(0,0,0,0.02);
             color: var(--apple-text-secondary);
@@ -58,7 +58,6 @@
             color: var(--apple-text);
         }
 
-        /* 第一區：遊戲介面中央 (已排序卡牌) */
         #area-1 {
             display: flex;
             align-items: center;
@@ -77,7 +76,6 @@
             box-sizing: border-box;
         }
 
-        /* 放置區 (Slot) */
         .slot {
             width: 80px;
             height: 115px;
@@ -101,7 +99,6 @@
             transform: scale(1.03);
         }
 
-        /* 卡牌樣式 */
         .card {
             width: 90px;
             height: 125px;
@@ -121,7 +118,6 @@
             transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
         
-        /* 手機點擊選中狀態 - 使用 Apple Blue 光暈 */
         .card.selected {
             border: 2px solid var(--apple-blue);
             transform: translateY(-6px) scale(1.02);
@@ -133,7 +129,6 @@
             margin: 0 2px;
         }
 
-        /* 卡牌上的隱藏順序數字 */
         .card-value-badge {
             position: absolute;
             bottom: -8px;
@@ -152,7 +147,6 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
 
-        /* 第二區：下放抽牌區 */
         #area-2 {
             display: flex;
             flex-direction: column;
@@ -168,7 +162,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* 答錯的震動動畫 */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-6px); }
@@ -180,28 +173,31 @@
             box-shadow: 0 4px 14px rgba(255, 59, 48, 0.2) !important;
         }
 
-        /* 遊戲結束畫面 */
-        #game-over {
-            display: none;
+        /* 初始開始畫面與遊戲結束畫面共用樣式 */
+        #start-screen, #game-over {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px); /* 磨砂玻璃效果 */
+            backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             color: var(--apple-text);
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 10;
         }
+
+        #game-over { display: none; }
         
-        #game-over h2 { 
+        h2 { 
             font-size: 2.5rem; 
             margin: 0 0 10px 0; 
             font-weight: 600;
+            text-align: center;
         }
         
-        #game-over p { 
+        p { 
             font-size: 1.1rem; 
             color: var(--apple-text-secondary);
             margin-bottom: 30px;
@@ -213,21 +209,15 @@
             background: var(--apple-blue);
             color: white;
             border: none;
-            border-radius: 980px; /* 膠囊圓角 */
+            border-radius: 980px;
             cursor: pointer;
             font-weight: 500;
             transition: background 0.2s ease, transform 0.1s ease;
         }
         
-        button:hover { 
-            background: var(--apple-blue-hover); 
-        }
-        
-        button:active {
-            transform: scale(0.96);
-        }
+        button:hover { background: var(--apple-blue-hover); }
+        button:active { transform: scale(0.96); }
 
-        /* 📱 手機版 RWD 響應式設計 */
         @media (max-width: 600px) {
             h1 { font-size: 1.6rem; }
             .slot { width: 50px; height: 75px; font-size: 0.75rem; border-width: 1px; border-radius: 10px; }
@@ -239,6 +229,16 @@
     </style>
 </head>
 <body>
+
+    <!-- 隱藏的 YouTube 播放器容器 -->
+    <div id="youtube-player" style="display: none;"></div>
+
+    <!-- 新增：初始開始畫面 (為了破解瀏覽器自動播放限制) -->
+    <div id="start-screen">
+        <h2>卡牌排序挑戰</h2>
+        <p>準備好接受挑戰了嗎？</p>
+        <button id="init-btn">開始遊戲</button>
+    </div>
 
     <h1>卡牌排序挑戰</h1>
     <div class="stats">
@@ -260,7 +260,57 @@
     </div>
 
     <script>
-        // 設定 30 張卡牌的資料 (前 8 張為你上傳的圖片)
+        // --- YouTube IFrame API 區塊 ---
+        let ytPlayer;
+        let isPlayerReady = false;
+        
+        // 請在此填入你想要播放的 YouTube 影片 ID 列表 (v=後面的隨機亂碼)
+        // 每次抽卡會從中隨機挑選一首播放
+        const ytMusicList = [
+            'eG5Zm8ZAutI', // Lofi Girl 範例
+            'iV4qduCR3MU', // Lofi 範例 2
+            'x2fAnFXDj9Q'  // Lofi 範例 3
+        ];
+
+        // 動態載入 YouTube API 腳本
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // YouTube API 準備就緒時的初始化函式
+        function onYouTubeIframeAPIReady() {
+            ytPlayer = new YT.Player('youtube-player', {
+                height: '0',
+                width: '0',
+                videoId: ytMusicList[0], // 預設載入第一首
+                playerVars: { 
+                    'autoplay': 0, 
+                    'controls': 0,
+                    'origin': window.location.origin
+                },
+                events: {
+                    'onReady': () => { 
+                        isPlayerReady = true; 
+                        // 啟用開始按鈕
+                        document.getElementById('init-btn').innerText = '開始遊戲';
+                        document.getElementById('init-btn').disabled = false;
+                    }
+                }
+            });
+        }
+
+        // 綁定開始按鈕
+        document.getElementById('init-btn').addEventListener('click', () => {
+            document.getElementById('start-screen').style.display = 'none';
+            startGame();
+        });
+        
+        // 預設按鈕狀態 (等待 YouTube API 載入)
+        document.getElementById('init-btn').innerText = '載入音樂中...';
+        document.getElementById('init-btn').disabled = true;
+
+        // --- 遊戲邏輯區塊 ---
         const allCardsData = [
             { id: 1, value: 1, src: 'images/01.png' },
             { id: 2, value: 2, src: 'images/02.png' },
@@ -335,10 +385,18 @@
             }
         }
 
+        // --- 核心修改：在抽卡時播放音樂 ---
         function drawNewCard() {
             currentCard = deck.pop();
             isCardSelected = false; 
             renderDrawnCard();
+
+            // 呼叫 YouTube API 播放隨機音樂
+            if (isPlayerReady) {
+                const randomVid = ytMusicList[Math.floor(Math.random() * ytMusicList.length)];
+                ytPlayer.loadVideoById(randomVid);
+                ytPlayer.playVideo();
+            }
         }
 
         function updateStats() {
@@ -443,6 +501,7 @@
                 board.splice(correctIndex, 0, currentCard);
                 updateStats();
                 
+                // 若答對但還沒結束，會觸發抽新卡 (自動換歌)
                 if (board.length >= TARGET_CARDS) {
                     renderBoard();
                     setTimeout(endGame, 300);
@@ -476,9 +535,13 @@
         function endGame() {
             document.getElementById('final-mistakes').innerText = mistakes;
             gameOverScreen.style.display = 'flex';
+            
+            // 遊戲結束時可選擇暫停音樂
+            if (isPlayerReady) ytPlayer.pauseVideo();
         }
 
-        startGame();
+        // 移除最底部的 startGame();
+        // 改由 #init-btn 點擊事件觸發
     </script>
 </body>
 </html>
