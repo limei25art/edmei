@@ -6,7 +6,6 @@
     <title>圖片卡牌排序遊戲</title>
     <style>
         :root {
-            --apple-bg: #F5F5F7;
             --apple-surface: #FFFFFF;
             --apple-text: #1D1D1F;
             --apple-text-secondary: #86868B;
@@ -14,48 +13,55 @@
             --apple-blue-hover: #0077ED;
             --apple-red: #FF3B30;
             --apple-green: #34C759;
-            --apple-border: #D2D2D7;
+            --apple-border: rgba(0, 0, 0, 0.08);
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            --card-shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            background-color: var(--apple-bg);
+            background: #ffffff;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(253, 255, 233, 1) 50%, rgba(212, 244, 255, 1) 100%);
             margin: 0;
-            padding: 20px 15px;
+            padding: 20px 15px 140px; 
             display: flex;
             flex-direction: column;
             align-items: center;
             color: var(--apple-text);
             touch-action: manipulation;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
 
         h1 { 
-            margin: 10px 0 20px; 
-            font-size: 2rem; 
-            font-weight: 600;
+            margin: 10px 0 15px; 
+            font-size: 2.2rem; 
+            font-weight: 700;
             text-align: center; 
             letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #1d1d1f 0%, #434344 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .stats {
             display: flex;
             gap: 15px;
             font-size: 0.95rem;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
             font-weight: 500;
-            background: var(--apple-surface);
-            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 12px 24px;
             border-radius: 980px;
             border: 1px solid var(--apple-border);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-            color: var(--apple-text-secondary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
         }
         
         .stats span { 
             font-weight: 600; 
-            color: var(--apple-text);
         }
 
         #area-1 {
@@ -63,167 +69,243 @@
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 12px;
-            min-height: 170px;
-            padding: 20px;
-            background: var(--apple-surface);
-            border-radius: 20px;
+            gap: 10px; /* 稍微縮小間距，配合縮小的槽位 */
+            min-height: 220px;
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 24px;
             border: 1px solid var(--apple-border);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
             margin-bottom: 40px;
             width: 100%;
-            max-width: 900px;
+            max-width: 1000px;
             box-sizing: border-box;
         }
 
+        /* 📌 關鍵優化：將「放這裡」槽位寬度縮小到 50px，高度保持 155px 與卡牌一致 */
         .slot {
-            width: 80px;
-            height: 115px;
-            border: 2px dashed #C7C7CC;
-            border-radius: 14px;
+            width: 50px;
+            height: 155px;
+            border: 1px dashed rgba(0, 0, 0, 0.15); 
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.85rem;
+            font-size: 0.75rem; /* 字體微調調小以完美契合窄框 */
             color: var(--apple-text-secondary);
-            transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+            writing-mode: vertical-lr; /* 寬度變窄後，文字改為直書更美觀 */
+            letter-spacing: 2px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             font-weight: 500;
             cursor: pointer;
-            background-color: var(--apple-bg);
+            background-color: rgba(0, 0, 0, 0.02); 
+            box-sizing: border-box;
         }
         
-        .slot.drag-over, .slot:active {
+        .slot:hover, .slot:active {
             background-color: rgba(0, 113, 227, 0.08);
             border-color: var(--apple-blue);
             color: var(--apple-blue);
-            transform: scale(1.03);
+            transform: scale(1.05); /* 點擊時輕微放大提示 */
         }
 
+        .slot.disabled {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        /* 標準卡牌尺寸 */
         .card {
-            width: 90px;
-            height: 125px;
+            width: 110px;
+            height: 155px;
             background-color: var(--apple-surface);
-            border: 1px solid var(--apple-border);
-            border-radius: 14px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+            box-shadow: var(--card-shadow);
             user-select: none;
-            cursor: grab;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             position: relative;
-            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .card.selected {
-            border: 2px solid var(--apple-blue);
-            transform: translateY(-6px) scale(1.02);
-            box-shadow: 0 10px 20px rgba(0, 113, 227, 0.15);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-sizing: border-box;
         }
 
         .board-card {
             cursor: default;
-            margin: 0 2px;
+        }
+        .board-card:nth-child(4n+1) { transform: rotate(-1.5deg) translateY(2px); }
+        .board-card:nth-child(4n+2) { transform: rotate(2deg) translateY(-1px); }
+        .board-card:nth-child(4n+3) { transform: rotate(-1deg) translateY(-3px); }
+        .board-card:nth-child(4n+4) { transform: rotate(1.5deg) translateY(1px); }
+
+        .board-card:hover {
+            transform: scale(1.06) rotate(0deg) translateY(-5px) !important;
+            box-shadow: var(--card-shadow-hover);
+            z-index: 5;
+        }
+
+        .current-card-style {
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
         }
 
         .card-value-badge {
             position: absolute;
-            bottom: -8px;
-            right: -8px;
-            background: var(--apple-surface);
+            bottom: -6px;
+            right: -6px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(4px);
             color: var(--apple-text);
-            width: 26px;
-            height: 26px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
-            font-weight: 600;
-            border: 1px solid var(--apple-border);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
         }
 
         #area-2 {
+            position: fixed;
+            bottom: 0; left: 0; width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--apple-border);
+            padding: 15px 20px min(25px, env(safe-area-inset-bottom));
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
+            z-index: 8;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.03);
         }
         
         .instruction {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--apple-text-secondary);
             font-weight: 500;
             text-align: center;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.2px;
+        }
+
+        #draw-area {
+            perspective: 800px;
+            height: 170px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-6px); }
-            40%, 80% { transform: translateX(6px); }
+            20%, 60% { transform: translateX(-8px) rotate(-1deg); }
+            40%, 80% { transform: translateX(8px) rotate(1deg); }
         }
         .shake { 
-            animation: shake 0.4s ease-in-out; 
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; 
             border-color: var(--apple-red) !important; 
-            box-shadow: 0 4px 14px rgba(255, 59, 48, 0.2) !important;
         }
 
         #start-screen, #game-over {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
             color: var(--apple-text);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 10;
+            z-index: 100;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; } to { opacity: 1; }
         }
 
         #game-over { display: none; }
         
         h2 { 
-            font-size: 2.5rem; 
+            font-size: 2.6rem; 
             margin: 0 0 10px 0; 
-            font-weight: 600;
-            text-align: center;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }
         
         p { 
             font-size: 1.1rem; 
             color: var(--apple-text-secondary);
-            margin-bottom: 30px;
+            margin-bottom: 35px;
         }
         
         button {
-            padding: 12px 32px;
+            padding: 14px 40px;
             font-size: 1.05rem;
             background: var(--apple-blue);
             color: white;
             border: none;
             border-radius: 980px;
             cursor: pointer;
-            font-weight: 500;
-            transition: background 0.2s ease, transform 0.1s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
-        button:hover { background: var(--apple-blue-hover); }
-        button:active { transform: scale(0.96); }
+        button:hover { 
+            background: var(--apple-blue-hover); 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 113, 227, 0.4);
+        }
+        button:active { 
+            transform: translateY(0) scale(0.97); 
+        }
+        button:disabled {
+            background: #E5E5EA; color: #AEAEB2; box-shadow: none; cursor: not-allowed;
+        }
 
+        /* ================= 手機版本 RWD 響應式佈局 ================= */
         @media (max-width: 600px) {
-            h1 { font-size: 1.6rem; }
-            .slot { width: 50px; height: 75px; font-size: 0.75rem; border-width: 1px; border-radius: 10px; }
-            .card { width: 60px; height: 85px; border-radius: 10px; }
-            .card-value-badge { width: 22px; height: 22px; font-size: 0.75rem; bottom: -6px; right: -6px; }
-            #area-1 { gap: 8px; padding: 15px; border-radius: 16px; }
-            .instruction { font-size: 0.85rem; }
+            h1 { font-size: 1.7rem; }
+            body { padding: 15px 10px 190px; }
+            
+            #area-1 { 
+                gap: 6px; padding: 15px 8px; border-radius: 20px; min-height: 140px; margin-bottom: 20px;
+            }
+            
+            /* 📌 手機端關鍵優化：將槽位寬度等比例縮小至 34px，高度 100px */
+            .slot { 
+                width: 34px; 
+                height: 100px; 
+                font-size: 0.6rem; 
+                border-radius: 8px; 
+                letter-spacing: 1px;
+            }
+            
+            .card { 
+                width: 70px; height: 100px; border-radius: 12px; 
+            }
+            
+            .board-card:hover { transform: none !important; }
+            .card-value-badge { 
+                width: 22px; height: 22px; font-size: 0.75rem; bottom: -4px; right: -4px; 
+            }
+            
+            #area-2 { padding: 12px 15px min(20px, env(safe-area-inset-bottom)); gap: 8px; }
+            #draw-area { height: 115px; }
+            .instruction { font-size: 0.78rem; line-height: 1.4; }
+            h2 { font-size: 2rem; }
         }
     </style>
 </head>
@@ -241,19 +323,21 @@
     <div class="stats">
         <div>進度：<span id="card-count" style="color: var(--apple-blue);">3 / 10</span></div>
         <div>錯誤：<span id="mistake-count" style="color: var(--apple-red);">0</span></div>
+        <div>⏱️ 時間：<span id="timer-count" style="color: var(--apple-text);">0秒</span></div>
     </div>
 
     <div id="area-1"></div>
 
     <div id="area-2">
-        <div class="instruction">電腦可拖曳卡牌，手機請點擊卡牌後再點擊上方空位</div>
+        <div class="instruction">直接點擊上方窄條「放這裡」槽位判定放入</div>
         <div id="draw-area"></div>
     </div>
 
     <div id="game-over">
         <h2>挑戰完成</h2>
-        <p>您的總錯誤次數為：<strong id="final-mistakes" style="color: var(--apple-red); font-size: 1.2rem;">0</strong> 次</p>
-        <button id="restart-btn">再玩一次</button>
+        <p>總計時：<strong id="final-time" style="color: var(--apple-blue); font-size: 1.4rem;">0秒</strong></p>
+        <p>您的總錯誤次數為：<strong id="final-mistakes" style="color: var(--apple-red); font-size: 1.4rem;">0</strong> 次</p>
+        <button onclick="startGame()">再玩一次</button>
     </div>
 
     <script>
@@ -261,7 +345,6 @@
         let ytPlayer;
         let isPlayerReady = false;
 
-        // 動態載入 YouTube API 腳本
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         const firstScriptTag = document.getElementsByTagName('script')[0];
@@ -269,15 +352,8 @@
 
         function onYouTubeIframeAPIReady() {
             ytPlayer = new YT.Player('youtube-player', {
-                height: '0',
-                width: '0',
-                videoId: 'x2fAnFXDj9Q', // 初始預設載入歌曲
-                playerVars: { 
-                    'autoplay': 0, 
-                    'controls': 0,
-                    'playsinline': 1, // 【手機優化】防止 iPhone 播放時強制跳出全螢幕
-                    'origin': window.location.origin
-                },
+                height: '0', width: '0', videoId: 'x2fAnFXDj9Q',
+                playerVars: { 'autoplay': 0, 'controls': 0, 'origin': window.location.origin },
                 events: {
                     'onReady': () => { 
                         isPlayerReady = true; 
@@ -288,30 +364,18 @@
             });
         }
 
-        // 【手機優化】必須在點擊按鈕的瞬間命令播放器動一下，解除手機的靜音鎖
         document.getElementById('init-btn').addEventListener('click', () => {
             document.getElementById('start-screen').style.display = 'none';
-            if (isPlayerReady) {
-                ytPlayer.playVideo(); 
-            }
-            startGame();
-        });
-
-        document.getElementById('restart-btn').addEventListener('click', () => {
-            if (isPlayerReady) {
-                ytPlayer.playVideo(); 
-            }
             startGame();
         });
         
         document.getElementById('init-btn').innerText = '載入音樂中...';
         document.getElementById('init-btn').disabled = true;
 
-        // --- 核心音樂卡牌資料庫 ---
         const allCardsData = [
-            { id: 1, value: 1, src: 'images/01.png', ytId: 'iV4qduCR3MU' }, 
-            { id: 2, value: 2, src: 'images/02.png', ytId: 'eG5Zm8ZAutI' }, 
-            { id: 3, value: 3, src: 'images/03.png', ytId: 'OTnVTUdyT30' }, 
+            { id: 1, value: 1, src: 'images/01.png', ytId: 'iV4qduCR3MU' },
+            { id: 2, value: 2, src: 'images/02.png', ytId: 'eG5Zm8ZAutI' },
+            { id: 3, value: 3, src: 'images/03.png', ytId: 'OTnVTUdyT30' },
             { id: 4, value: 4, src: 'images/04.png', ytId: 'iV4qduCR3MU' }, 
             { id: 5, value: 5, src: 'images/05.png', ytId: 'eG5Zm8ZAutI' }, 
             { id: 6, value: 6, src: 'images/06.png', ytId: 'OTnVTUdyT30' }, 
@@ -341,38 +405,29 @@
             { id: 30, value: 30, src: 'images/30.png', ytId: 'OTnVTUdyT30' }
         ];
 
-        let deck = [];
-        let board = [];
-        let currentCard = null;
-        let mistakes = 0;
-        let isCardSelected = false; 
+        let deck = []; let board = []; let currentCard = null; let mistakes = 0;
+        let timerInterval = null; let elapsedSeconds = 0;
 
-        const TARGET_CARDS = 10; 
-        const TOTAL_CARDS_IN_DB = 30; 
+        const TARGET_CARDS = 10; const TOTAL_CARDS_IN_DB = 30; 
 
         const area1 = document.getElementById('area-1');
         const drawArea = document.getElementById('draw-area');
         const mistakeCountEl = document.getElementById('mistake-count');
         const cardCountEl = document.getElementById('card-count');
+        const timerCountEl = document.getElementById('timer-count');
         const gameOverScreen = document.getElementById('game-over');
 
         function startGame() {
-            deck = [...allCardsData];
-            shuffleDeck(deck);
-
-            board = [];
-            mistakes = 0;
-            isCardSelected = false;
+            deck = [...allCardsData]; shuffleDeck(deck);
+            board = []; mistakes = 0;
             updateStats();
             gameOverScreen.style.display = 'none';
 
-            for(let i = 0; i < 3; i++) {
-                board.push(deck.pop());
-            }
+            for(let i = 0; i < 3; i++) { board.push(deck.pop()); }
             board.sort((a, b) => a.value - b.value);
 
-            drawNewCard();
-            renderBoard();
+            drawNewCard(); renderBoard();
+            startTimer();
         }
 
         function shuffleDeck(array) {
@@ -383,22 +438,9 @@
         }
 
         function drawNewCard() {
-            currentCard = deck.pop();
-            isCardSelected = false; 
-            renderDrawnCard();
-
-            // 電腦版流程：抽卡時直接嘗試加載與播放
+            currentCard = deck.pop(); renderDrawnCard();
             if (isPlayerReady && currentCard && currentCard.ytId) {
-                ytPlayer.cueVideoById(currentCard.ytId); // 先行預載緩衝
-                ytPlayer.playVideo();
-            }
-        }
-
-        // 【手機優化專用功能】在玩家實際點擊螢幕卡片時強制切換音樂
-        function playCurrentCardMusic() {
-            if (isPlayerReady && currentCard && currentCard.ytId) {
-                ytPlayer.loadVideoById(currentCard.ytId);
-                ytPlayer.playVideo();
+                ytPlayer.loadVideoById(currentCard.ytId); ytPlayer.playVideo();
             }
         }
 
@@ -407,12 +449,20 @@
             cardCountEl.innerText = `${board.length} / ${TARGET_CARDS}`;
         }
 
+        function startTimer() {
+            clearInterval(timerInterval);
+            elapsedSeconds = 0;
+            timerCountEl.innerText = "0秒";
+            timerInterval = setInterval(() => {
+                elapsedSeconds++;
+                timerCountEl.innerText = `${elapsedSeconds}秒`;
+            }, 1000);
+        }
+
         function renderBoard() {
             area1.innerHTML = '';
-            
             for (let i = 0; i <= board.length; i++) {
                 let showSlot = true;
-                
                 if (i > 0 && i < board.length) {
                     if (board[i].value - board[i-1].value <= 1) showSlot = false;
                 } else if (i === 0 && board.length > 0) {
@@ -423,19 +473,15 @@
 
                 if (showSlot) {
                     const slot = document.createElement('div');
-                    slot.className = 'slot';
-                    slot.innerText = '放這裡';
-                    slot.dataset.index = i;
+                    slot.className = 'slot'; slot.innerText = '放這裡'; slot.dataset.index = i;
+                    
+                    slot.addEventListener('click', (e) => {
+                        if (currentCard) processPlacement(parseInt(e.currentTarget.dataset.index));
+                    });
                     
                     slot.addEventListener('dragover', handleDragOver);
                     slot.addEventListener('dragleave', handleDragLeave);
                     slot.addEventListener('drop', handleDrop);
-
-                    slot.addEventListener('click', (e) => {
-                        if (isCardSelected) {
-                            processPlacement(parseInt(e.currentTarget.dataset.index));
-                        }
-                    });
                     
                     area1.appendChild(slot);
                 }
@@ -445,12 +491,9 @@
                     const card = document.createElement('div');
                     card.className = 'card board-card';
                     card.style.backgroundImage = `url('${cardData.src}')`;
-
                     const badge = document.createElement('div');
-                    badge.className = 'card-value-badge';
-                    badge.innerText = cardData.value;
+                    badge.className = 'card-value-badge'; badge.innerText = cardData.value;
                     card.appendChild(badge);
-
                     area1.appendChild(card);
                 }
             }
@@ -459,44 +502,22 @@
         function renderDrawnCard() {
             drawArea.innerHTML = '';
             const card = document.createElement('div');
-            card.className = 'card';
-            card.draggable = true;
-            card.id = 'current-drag-card';
+            card.className = 'card current-card-style'; card.draggable = true; card.id = 'current-drag-card';
             card.style.backgroundImage = `url('${currentCard.src}')`;
 
             card.addEventListener('dragstart', (e) => {
                 e.dataTransfer.setData('text/plain', currentCard.id);
                 setTimeout(() => card.style.opacity = '0.5', 0);
             });
-            card.addEventListener('dragend', () => {
-                card.style.opacity = '1';
-            });
-
-            card.addEventListener('click', () => {
-                isCardSelected = true;
-                card.classList.add('selected');
-                
-                // 【手機優化核心】手機用戶必須點擊卡牌，在點擊的當下立刻強制觸發 YouTube 播放，繞過手機自動播放攔截
-                playCurrentCardMusic();
-            });
-
+            card.addEventListener('dragend', () => card.style.opacity = '1');
             drawArea.appendChild(card);
         }
 
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.currentTarget.classList.add('drag-over');
-        }
-
-        function handleDragLeave(e) {
-            e.currentTarget.classList.remove('drag-over');
-        }
-
+        function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+        function handleDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
         function handleDrop(e) {
-            e.preventDefault();
-            const slot = e.currentTarget;
-            slot.classList.remove('drag-over');
-            processPlacement(parseInt(slot.dataset.index));
+            e.preventDefault(); const slot = e.currentTarget;
+            slot.classList.remove('drag-over'); processPlacement(parseInt(slot.dataset.index));
         }
 
         function processPlacement(dropIndex) {
@@ -506,38 +527,37 @@
             if (dropIndex === correctIndex) {
                 board.splice(correctIndex, 0, currentCard);
                 updateStats();
-                
                 if (board.length >= TARGET_CARDS) {
-                    renderBoard();
-                    setTimeout(endGame, 300);
+                    renderBoard(); setTimeout(endGame, 300);
                 } else {
-                    drawNewCard();
-                    renderBoard();
+                    drawNewCard(); renderBoard();
                 }
             } else {
-                mistakes++;
-                updateStats();
-                isCardSelected = false; 
+                mistakes++; updateStats();
+                
+                const allSlots = document.querySelectorAll('.slot');
+                allSlots.forEach(s => s.classList.add('disabled'));
+                
                 if(dragCardElement) {
-                    dragCardElement.classList.remove('selected');
                     dragCardElement.classList.add('shake');
                     setTimeout(() => {
                         dragCardElement.classList.remove('shake');
-                    }, 400);
+                        allSlots.forEach(s => s.classList.remove('disabled'));
+                    }, 400); 
                 }
             }
         }
 
         function getCorrectIndex(cardToPlace) {
             for (let i = 0; i < board.length; i++) {
-                if (cardToPlace.value < board[i].value) {
-                    return i;
-                }
+                if (cardToPlace.value < board[i].value) return i;
             }
             return board.length;
         }
 
         function endGame() {
+            clearInterval(timerInterval);
+            document.getElementById('final-time').innerText = `${elapsedSeconds}秒`;
             document.getElementById('final-mistakes').innerText = mistakes;
             gameOverScreen.style.display = 'flex';
             if (isPlayerReady) ytPlayer.pauseVideo();
