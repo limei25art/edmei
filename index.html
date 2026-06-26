@@ -3,196 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>圖片卡牌排序遊戲</title>
+    <title>個人效率風格 - 卡牌排序挑戰</title>
     <style>
         :root {
-            --apple-surface: #FFFFFF;
-            --apple-text: #1D1D1F;
-            --apple-text-secondary: #86868B;
-            --apple-blue: #0071E3;
-            --apple-blue-hover: #0077ED;
-            --apple-red: #FF3B30;
-            --apple-green: #34C759;
-            --apple-border: rgba(0, 0, 0, 0.08);
-            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            --card-shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
+            /* 柔和材質色調 */
+            --bg-base: #F0F2F6; /* 低飽和、高明度的溫和底色 */
+            --text-main: #2D3142; /* 深灰藍，比純黑更友善 */
+            --text-muted: #9094A6;
+            --theme-accent: #4F46E5; /* 輕量主色調：靛藍 */
+            --theme-accent-hover: #4338CA;
+            --theme-danger: #EF4444;
+
+            /* 微浮雕核心陰影：結合暗影與亮光 */
+            --soft-out-shadow: 6px 6px 16px rgba(163, 177, 198, 0.6), -6px -6px 16px rgba(255, 255, 255, 0.8);
+            --soft-out-shadow-hover: 10px 10px 24px rgba(163, 177, 198, 0.7), -10px -10px 24px rgba(255, 255, 255, 0.9);
+            --soft-in-shadow: inset 4px 4px 8px rgba(163, 177, 198, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+            
+            /* 180ms 柔和彈性曲線 */
+            --soft-transition: all 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
-            background: #ffffff;
-            background: linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(253, 255, 233, 1) 50%, rgba(212, 244, 255, 1) 100%);
+            background-color: var(--bg-base);
             margin: 0;
-            padding: 20px 15px 140px; 
+            padding: 20px 15px 160px; 
             display: flex;
             flex-direction: column;
             align-items: center;
-            color: var(--apple-text);
+            color: var(--text-main);
             touch-action: manipulation;
             min-height: 100vh;
             box-sizing: border-box;
         }
 
         h1 { 
-            margin: 10px 0 15px; 
-            font-size: 2.2rem; 
-            font-weight: 700;
+            margin: 15px 0 20px; 
+            font-size: 1.8rem; 
+            font-weight: 600;
             text-align: center; 
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #1d1d1f 0%, #434344 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.3px;
+            color: var(--text-main);
         }
 
+        /* 膠囊小工具面板 */
         .stats {
             display: flex;
-            gap: 15px;
-            font-size: 0.95rem;
-            margin-bottom: 30px;
+            gap: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 35px;
             font-weight: 500;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 12px 24px;
-            border-radius: 980px;
-            border: 1px solid var(--apple-border);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            background: var(--bg-base);
+            padding: 10px 24px;
+            border-radius: 40px; /* 完美膠囊按鈕 */
+            box-shadow: var(--soft-out-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.4);
         }
         
+        .stats div {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .stats span { 
             font-weight: 600; 
         }
 
+        /* 主控制板/舞台 */
         #area-1 {
             display: flex;
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 10px; /* 稍微縮小間距，配合縮小的槽位 */
-            min-height: 220px;
-            padding: 30px 20px;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 24px;
-            border: 1px solid var(--apple-border);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            gap: 12px;
+            min-height: 240px;
+            padding: 35px 25px;
+            background: var(--bg-base);
+            border-radius: 32px; /* 大圓角 */
+            box-shadow: var(--soft-in-shadow); /* 舞台內嵌質感 */
             margin-bottom: 40px;
             width: 100%;
-            max-width: 1000px;
+            max-width: 1020px;
             box-sizing: border-box;
         }
 
-        /* 📌 關鍵優化：將「放這裡」槽位寬度縮小到 50px，高度保持 155px 與卡牌一致 */
+        /* 窄條「放這裡」插槽：內凹質感，Active時亮起 */
         .slot {
             width: 50px;
             height: 155px;
-            border: 1px dashed rgba(0, 0, 0, 0.15); 
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem; /* 字體微調調小以完美契合窄框 */
-            color: var(--apple-text-secondary);
-            writing-mode: vertical-lr; /* 寬度變窄後，文字改為直書更美觀 */
-            letter-spacing: 2px;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            font-weight: 500;
-            cursor: pointer;
-            background-color: rgba(0, 0, 0, 0.02); 
-            box-sizing: border-box;
-        }
-        
-        .slot:hover, .slot:active {
-            background-color: rgba(0, 113, 227, 0.08);
-            border-color: var(--apple-blue);
-            color: var(--apple-blue);
-            transform: scale(1.05); /* 點擊時輕微放大提示 */
-        }
-
-        .slot.disabled {
-            pointer-events: none;
-            opacity: 0.5;
-        }
-
-        /* 標準卡牌尺寸 */
-        .card {
-            width: 110px;
-            height: 155px;
-            background-color: var(--apple-surface);
-            border: 1px solid rgba(0, 0, 0, 0.06);
             border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: var(--card-shadow);
+            font-size: 0.75rem; 
+            color: var(--text-muted);
+            writing-mode: vertical-lr; 
+            letter-spacing: 2px;
+            transition: var(--soft-transition);
+            font-weight: 500;
+            cursor: pointer;
+            background: var(--bg-base);
+            box-shadow: var(--soft-in-shadow); /* 預設內凹 */
+            border: none;
+            box-sizing: border-box;
+        }
+        
+        /* 觸摸/懸停時：槽位輕微浮起並亮起主色 */
+        .slot:hover, .slot:active {
+            box-shadow: var(--soft-out-shadow);
+            color: var(--theme-accent);
+            transform: scale(1.02);
+        }
+
+        .slot.disabled {
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        /* 霧面大圓角卡片 */
+        .card {
+            width: 110px;
+            height: 155px;
+            background-color: var(--bg-base);
+            border-radius: 20px; /* 柔和圓角 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--soft-out-shadow); /* 外浮雕 */
             user-select: none;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             position: relative;
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: var(--soft-transition);
+            border: 1px solid rgba(255, 255, 255, 0.5); /* 精緻邊緣微高光 */
             box-sizing: border-box;
         }
 
         .board-card {
             cursor: default;
         }
-        .board-card:nth-child(4n+1) { transform: rotate(-1.5deg) translateY(2px); }
-        .board-card:nth-child(4n+2) { transform: rotate(2deg) translateY(-1px); }
-        .board-card:nth-child(4n+3) { transform: rotate(-1deg) translateY(-3px); }
-        .board-card:nth-child(4n+4) { transform: rotate(1.5deg) translateY(1px); }
 
+        /* 懸停：模擬精緻上浮 */
         .board-card:hover {
-            transform: scale(1.06) rotate(0deg) translateY(-5px) !important;
-            box-shadow: var(--card-shadow-hover);
+            transform: translateY(-6px);
+            box-shadow: var(--soft-out-shadow-hover);
             z-index: 5;
         }
 
+        /* 抽牌區卡片：更強烈的懸浮感 */
         .current-card-style {
-            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+            box-shadow: var(--soft-out-shadow-hover);
         }
 
+        /* 線性極簡角標 */
         .card-value-badge {
             position: absolute;
-            bottom: -6px;
-            right: -6px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(4px);
-            color: var(--apple-text);
-            width: 28px;
-            height: 28px;
+            bottom: 8px;
+            right: 8px;
+            background: var(--bg-base);
+            color: var(--text-main);
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.85rem;
-            font-weight: 700;
-            border: 1px solid rgba(0,0,0,0.05);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-shadow: var(--soft-out-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
+        /* 底部中央控制面板 */
         #area-2 {
             position: fixed;
-            bottom: 0; left: 0; width: 100%;
-            background: rgba(255, 255, 255, 0.8);
+            bottom: 20px; left: 50%; 
+            transform: translateX(-50%);
+            width: calc(100% - 30px);
+            max-width: 600px;
+            background: rgba(240, 242, 246, 0.85); /* 霧面半透明融於背景 */
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid var(--apple-border);
-            padding: 15px 20px min(25px, env(safe-area-inset-bottom));
+            border-radius: 30px;
+            padding: 20px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 15px;
             z-index: 8;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.03);
+            box-shadow: var(--soft-out-shadow-hover);
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
         
         .instruction {
-            font-size: 0.85rem;
-            color: var(--apple-text-secondary);
+            font-size: 0.8rem;
+            color: var(--text-muted);
             font-weight: 500;
             text-align: center;
             letter-spacing: 0.2px;
@@ -206,29 +215,29 @@
             justify-content: center;
         }
 
-        @keyframes shake {
+        /* 答錯時的柔和震動 */
+        @keyframes soft-shake {
             0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-8px) rotate(-1deg); }
-            40%, 80% { transform: translateX(8px) rotate(1deg); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
         }
         .shake { 
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; 
-            border-color: var(--apple-red) !important; 
+            animation: soft-shake 0.3s ease-in-out both; 
+            box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.2), var(--soft-out-shadow);
         }
 
+        /* 覆蓋面板 */
         #start-screen, #game-over {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            color: var(--apple-text);
+            background: var(--bg-base);
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 100;
-            animation: fadeIn 0.5s ease;
+            animation: fadeIn 0.3s ease;
         }
 
         @keyframes fadeIn {
@@ -238,74 +247,71 @@
         #game-over { display: none; }
         
         h2 { 
-            font-size: 2.6rem; 
-            margin: 0 0 10px 0; 
-            font-weight: 700;
+            font-size: 2.2rem; 
+            margin: 0 0 12px 0; 
+            font-weight: 600;
             letter-spacing: -0.5px;
         }
         
         p { 
-            font-size: 1.1rem; 
-            color: var(--apple-text-secondary);
-            margin-bottom: 35px;
+            font-size: 1rem; 
+            color: var(--text-muted);
+            margin-bottom: 40px;
         }
         
+        /* 核心操作：少量的鮮艷色塊突出（膠囊按鈕與模擬按壓） */
         button {
-            padding: 14px 40px;
-            font-size: 1.05rem;
-            background: var(--apple-blue);
+            padding: 14px 48px;
+            font-size: 1rem;
+            background: var(--theme-accent);
             color: white;
             border: none;
-            border-radius: 980px;
+            border-radius: 40px; /* 完美膠囊 */
             cursor: pointer;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            font-weight: 500;
+            box-shadow: 0 8px 16px rgba(79, 70, 229, 0.25);
+            transition: var(--soft-transition);
         }
         
         button:hover { 
-            background: var(--apple-blue-hover); 
+            background: var(--theme-accent-hover); 
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 113, 227, 0.4);
+            box-shadow: 0 12px 20px rgba(79, 70, 229, 0.35);
         }
+        /* 按下瞬間：下沉反饋 */
         button:active { 
-            transform: translateY(0) scale(0.97); 
+            transform: translateY(1px); 
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
         }
         button:disabled {
-            background: #E5E5EA; color: #AEAEB2; box-shadow: none; cursor: not-allowed;
+            background: #E2E8F0; color: #94A3B8; box-shadow: none; cursor: not-allowed;
         }
 
-        /* ================= 手機版本 RWD 響應式佈局 ================= */
+        /* ================= RWD 行動裝置優化 ================= */
         @media (max-width: 600px) {
-            h1 { font-size: 1.7rem; }
-            body { padding: 15px 10px 190px; }
+            h1 { font-size: 1.5rem; }
+            body { padding: 15px 10px 240px; }
             
             #area-1 { 
-                gap: 6px; padding: 15px 8px; border-radius: 20px; min-height: 140px; margin-bottom: 20px;
+                gap: 8px; padding: 20px 10px; border-radius: 24px; min-height: 140px; margin-bottom: 20px;
             }
             
-            /* 📌 手機端關鍵優化：將槽位寬度等比例縮小至 34px，高度 100px */
             .slot { 
-                width: 34px; 
-                height: 100px; 
-                font-size: 0.6rem; 
-                border-radius: 8px; 
-                letter-spacing: 1px;
+                width: 34px; height: 100px; font-size: 0.6rem; border-radius: 10px; 
             }
             
             .card { 
-                width: 70px; height: 100px; border-radius: 12px; 
+                width: 70px; height: 100px; border-radius: 14px; 
             }
             
             .board-card:hover { transform: none !important; }
             .card-value-badge { 
-                width: 22px; height: 22px; font-size: 0.75rem; bottom: -4px; right: -4px; 
+                width: 20px; height: 20px; font-size: 0.7rem; bottom: 6px; right: 6px; 
             }
             
-            #area-2 { padding: 12px 15px min(20px, env(safe-area-inset-bottom)); gap: 8px; }
+            #area-2 { bottom: 15px; width: calc(100% - 20px); padding: 15px; gap: 10px; }
             #draw-area { height: 115px; }
-            .instruction { font-size: 0.78rem; line-height: 1.4; }
-            h2 { font-size: 2rem; }
+            h2 { font-size: 1.8rem; }
         }
     </style>
 </head>
@@ -315,40 +321,35 @@
 
     <div id="start-screen">
         <h2>卡牌排序挑戰</h2>
-        <p>準備好接受挑戰了嗎？</p>
-        <button id="init-btn">開始遊戲</button>
+        <p>優雅、專注、放鬆的效率體驗</p>
+        <button id="init-btn">進入空間</button>
     </div>
 
     <h1>卡牌排序挑戰</h1>
     <div class="stats">
-        <div>進度：<span id="card-count" style="color: var(--apple-blue);">3 / 10</span></div>
-        <div>錯誤：<span id="mistake-count" style="color: var(--apple-red);">0</span></div>
-        <div>⏱️ 時間：<span id="timer-count" style="color: var(--apple-text);">0秒</span></div>
+        <div>進度 <span id="card-count" style="color: var(--theme-accent);">3 / 10</span></div>
+        <div>失誤 <span id="mistake-count" style="color: var(--theme-danger);">0</span></div>
+        <div>⏱️ 時間 <span id="timer-count">0秒</span></div>
     </div>
 
     <div id="area-1"></div>
 
     <div id="area-2">
-        <div class="instruction">直接點擊上方窄條「放這裡」槽位判定放入</div>
+        <div class="instruction">輕觸上方內嵌槽位判定卡牌插入點</div>
         <div id="draw-area"></div>
     </div>
 
     <div id="game-over">
         <h2>挑戰完成</h2>
-        <p>總計時：<strong id="final-time" style="color: var(--apple-blue); font-size: 1.4rem;">0秒</strong></p>
-        <p>您的總錯誤次數為：<strong id="final-mistakes" style="color: var(--apple-red); font-size: 1.4rem;">0</strong> 次</p>
-        <button onclick="startGame()">再玩一次</button>
+        <p>總計時：<strong id="final-time" style="color: var(--theme-accent); font-size: 1.3rem;">0秒</strong> &nbsp;&nbsp; 錯誤次數：<strong id="final-mistakes" style="color: var(--theme-danger); font-size: 1.3rem;">0</strong></p>
+        <button onclick="startGame()">重啟挑戰</button>
     </div>
 
     <script>
-        // --- YouTube IFrame API 區塊 ---
-        let ytPlayer;
-        let isPlayerReady = false;
-
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        // --- YouTube IFrame API ---
+        let ytPlayer; let isPlayerReady = false;
+        const tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         function onYouTubeIframeAPIReady() {
             ytPlayer = new YT.Player('youtube-player', {
@@ -357,7 +358,7 @@
                 events: {
                     'onReady': () => { 
                         isPlayerReady = true; 
-                        document.getElementById('init-btn').innerText = '開始遊戲';
+                        document.getElementById('init-btn').innerText = '進入空間';
                         document.getElementById('init-btn').disabled = false;
                     }
                 }
@@ -368,9 +369,6 @@
             document.getElementById('start-screen').style.display = 'none';
             startGame();
         });
-        
-        document.getElementById('init-btn').innerText = '載入音樂中...';
-        document.getElementById('init-btn').disabled = true;
 
         const allCardsData = [
             { id: 1, value: 1, src: 'images/01.png', ytId: 'iV4qduCR3MU' },
@@ -407,33 +405,23 @@
 
         let deck = []; let board = []; let currentCard = null; let mistakes = 0;
         let timerInterval = null; let elapsedSeconds = 0;
-
         const TARGET_CARDS = 10; const TOTAL_CARDS_IN_DB = 30; 
 
-        const area1 = document.getElementById('area-1');
-        const drawArea = document.getElementById('draw-area');
-        const mistakeCountEl = document.getElementById('mistake-count');
-        const cardCountEl = document.getElementById('card-count');
-        const timerCountEl = document.getElementById('timer-count');
-        const gameOverScreen = document.getElementById('game-over');
+        const area1 = document.getElementById('area-1'); const drawArea = document.getElementById('draw-area');
+        const mistakeCountEl = document.getElementById('mistake-count'); const cardCountEl = document.getElementById('card-count');
+        const timerCountEl = document.getElementById('timer-count'); const gameOverScreen = document.getElementById('game-over');
 
         function startGame() {
-            deck = [...allCardsData]; shuffleDeck(deck);
-            board = []; mistakes = 0;
-            updateStats();
-            gameOverScreen.style.display = 'none';
-
+            deck = [...allCardsData]; shuffleDeck(deck); board = []; mistakes = 0;
+            updateStats(); gameOverScreen.style.display = 'none';
             for(let i = 0; i < 3; i++) { board.push(deck.pop()); }
             board.sort((a, b) => a.value - b.value);
-
-            drawNewCard(); renderBoard();
-            startTimer();
+            drawNewCard(); renderBoard(); startTimer();
         }
 
         function shuffleDeck(array) {
             for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+                const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]];
             }
         }
 
@@ -450,13 +438,8 @@
         }
 
         function startTimer() {
-            clearInterval(timerInterval);
-            elapsedSeconds = 0;
-            timerCountEl.innerText = "0秒";
-            timerInterval = setInterval(() => {
-                elapsedSeconds++;
-                timerCountEl.innerText = `${elapsedSeconds}秒`;
-            }, 1000);
+            clearInterval(timerInterval); elapsedSeconds = 0; timerCountEl.innerText = "0秒";
+            timerInterval = setInterval(() => { elapsedSeconds++; timerCountEl.innerText = `${elapsedSeconds}秒`; }, 1000);
         }
 
         function renderBoard() {
@@ -474,15 +457,7 @@
                 if (showSlot) {
                     const slot = document.createElement('div');
                     slot.className = 'slot'; slot.innerText = '放這裡'; slot.dataset.index = i;
-                    
-                    slot.addEventListener('click', (e) => {
-                        if (currentCard) processPlacement(parseInt(e.currentTarget.dataset.index));
-                    });
-                    
-                    slot.addEventListener('dragover', handleDragOver);
-                    slot.addEventListener('dragleave', handleDragLeave);
-                    slot.addEventListener('drop', handleDrop);
-                    
+                    slot.addEventListener('click', (e) => { if (currentCard) processPlacement(parseInt(e.currentTarget.dataset.index)); });
                     area1.appendChild(slot);
                 }
 
@@ -502,22 +477,9 @@
         function renderDrawnCard() {
             drawArea.innerHTML = '';
             const card = document.createElement('div');
-            card.className = 'card current-card-style'; card.draggable = true; card.id = 'current-drag-card';
+            card.className = 'card current-card-style'; card.id = 'current-drag-card';
             card.style.backgroundImage = `url('${currentCard.src}')`;
-
-            card.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', currentCard.id);
-                setTimeout(() => card.style.opacity = '0.5', 0);
-            });
-            card.addEventListener('dragend', () => card.style.opacity = '1');
             drawArea.appendChild(card);
-        }
-
-        function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
-        function handleDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
-        function handleDrop(e) {
-            e.preventDefault(); const slot = e.currentTarget;
-            slot.classList.remove('drag-over'); processPlacement(parseInt(slot.dataset.index));
         }
 
         function processPlacement(dropIndex) {
@@ -525,33 +487,22 @@
             const dragCardElement = document.getElementById('current-drag-card');
 
             if (dropIndex === correctIndex) {
-                board.splice(correctIndex, 0, currentCard);
-                updateStats();
-                if (board.length >= TARGET_CARDS) {
-                    renderBoard(); setTimeout(endGame, 300);
-                } else {
-                    drawNewCard(); renderBoard();
-                }
+                board.splice(correctIndex, 0, currentCard); updateStats();
+                if (board.length >= TARGET_CARDS) { renderBoard(); setTimeout(endGame, 300); } 
+                else { drawNewCard(); renderBoard(); }
             } else {
                 mistakes++; updateStats();
-                
                 const allSlots = document.querySelectorAll('.slot');
                 allSlots.forEach(s => s.classList.add('disabled'));
-                
                 if(dragCardElement) {
                     dragCardElement.classList.add('shake');
-                    setTimeout(() => {
-                        dragCardElement.classList.remove('shake');
-                        allSlots.forEach(s => s.classList.remove('disabled'));
-                    }, 400); 
+                    setTimeout(() => { dragCardElement.classList.remove('shake'); allSlots.forEach(s => s.classList.remove('disabled')); }, 400); 
                 }
             }
         }
 
         function getCorrectIndex(cardToPlace) {
-            for (let i = 0; i < board.length; i++) {
-                if (cardToPlace.value < board[i].value) return i;
-            }
+            for (let i = 0; i < board.length; i++) { if (cardToPlace.value < board[i].value) return i; }
             return board.length;
         }
 
